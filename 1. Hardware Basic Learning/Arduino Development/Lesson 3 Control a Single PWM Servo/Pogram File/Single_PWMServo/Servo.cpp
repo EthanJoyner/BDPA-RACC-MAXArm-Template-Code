@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "Servo.h"
 #include <esp32-hal-ledc.h>
 
@@ -28,9 +27,7 @@ bool Servo::attach(int pin, int channel,
     _minPulseWidth = minPulseWidth;
     _maxPulseWidth = maxPulseWidth;
 
-    ledcSetup(_channel, 50, 16); // channel X, 50 Hz, 16-bit depth
-    ledcAttachPin(_pin, _channel);
-    return true;
+    return ledcAttachChannel(_pin, 50, 16, _channel);
 }
 
 bool Servo::detach() {
@@ -41,7 +38,7 @@ bool Servo::detach() {
     if(_channel == (channel_next_free - 1))
         channel_next_free--;
 
-    ledcDetachPin(_pin);
+    ledcDetach(_pin);
     _pin = PIN_NOT_ATTACHED;
     return true;
 }
@@ -57,7 +54,7 @@ void Servo::writeMicroseconds(int pulseUs) {
     }
     pulseUs = constrain(pulseUs, _minPulseWidth, _maxPulseWidth);
     _pulseWidthDuty = _usToDuty(pulseUs);
-    ledcWrite(_channel, _pulseWidthDuty);
+    ledcWrite(_pin, _pulseWidthDuty);
 }
 
 int Servo::read() {
@@ -68,7 +65,7 @@ int Servo::readMicroseconds() {
     if (!this->attached()) {
         return 0;
     }
-    int duty = ledcRead(_channel);
+    int duty = ledcRead(_pin);
     return _dutyToUs(duty);
 }
 
